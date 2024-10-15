@@ -14,20 +14,23 @@ class HcbSoapClient:
     AM_ID = "55632A13-35C5-4169-B872-F5ABDC25DF6A"
     PM_ID = "6E7A050E-0295-4200-8EDC-3611BB5DE1C1"
 
-    def _get_soap_header(self) -> str:
+    @staticmethod
+    def _get_soap_header() -> str:
         """Return the soap header."""
         payload = '<?xml version="1.0" encoding="utf-8"?>'
         payload += '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'
         payload += "<soap:Body>"
         return payload
-
-    def _get_soap_footer(self) -> str:
+    
+    @staticmethod
+    def _get_soap_footer() -> str:
         """Return the soap footer."""
         payload = "</soap:Body>"
         payload += "</soap:Envelope>"
         return payload
-
-    def _get_standard_headers(self) -> str:
+    
+    @staticmethod
+    def _get_standard_headers() -> str:
         """Return standard headers."""
         return {
             "app-version": "3.6.0",
@@ -42,18 +45,18 @@ class HcbSoapClient:
             "cookie": "SRV=prdweb1",
         }
 
-    async def get_school_info(self, schoolCode: str) -> ValidateCustomerAccountNumber:
+    async def get_school_info(schoolCode: str) -> ValidateCustomerAccountNumber:
         """Return the school info from the api."""
-        payload = self._get_soap_header()
+        payload = HcbSoapClient._get_soap_header()
         payload += '<s1100 xmlns="http://tempuri.org/">'
         payload += "<P1>" + schoolCode + "</P1>"
         payload += "</s1100>"
-        payload += self._get_soap_footer()
-        headers = self._get_standard_headers()
+        payload += HcbSoapClient._get_soap_footer()
+        headers = HcbSoapClient._get_standard_headers()
         headers["soapaction"] = "http://tempuri.org/ISynoviaApi/s1100"
         async with (
             aiohttp.ClientSession() as session,
-            session.post(self._url, data=payload, headers=headers) as response,
+            session.post(HcbSoapClient._url, data=payload, headers=headers) as response,
         ):
             if response.status != 200:
                 return None
@@ -61,11 +64,10 @@ class HcbSoapClient:
             root = S1100.from_dict(xmltodict.parse(text))
             return root.s_envelope.s_body.s1100_response.s1100_result.synovia_api.validate_customer_account_number
 
-    async def get_parent_info(
-        self, schoolId: str, username: str, password: str
+    async def get_parent_info(schoolId: str, username: str, password: str
     ) -> ParentLogin:
         """Return the user info from the api."""
-        payload = self._get_soap_header()
+        payload = HcbSoapClient._get_soap_header()
         payload += '<s1157 xmlns="http://tempuri.org/">'
         payload += "<P1>" + schoolId + "</P1>"
         payload += "<P2>" + username + "</P2>"
@@ -75,13 +77,13 @@ class HcbSoapClient:
         payload += "<P6>3.6.0</P6>"
         payload += "<P7/>"
         payload += "</s1157>"
-        payload += self._get_soap_footer()
-        headers = self._get_standard_headers()
+        payload += HcbSoapClient._get_soap_footer()
+        headers = HcbSoapClient._get_standard_headers()
         headers["soapaction"] = "http://tempuri.org/ISynoviaApi/s1157"
 
         async with (
             aiohttp.ClientSession() as session,
-            session.post(self._url, data=payload, headers=headers) as response,
+            session.post(HcbSoapClient._url, data=payload, headers=headers) as response,
         ):
             if response.status != 200:
                 return None
@@ -89,11 +91,10 @@ class HcbSoapClient:
             root = S1157.from_dict(xmltodict.parse(text, force_list={"Student"}))
             return root.s_envelope.s_body.s1157_response.s1157_result.synovia_api.parent_login
 
-    async def get_bus_info(
-        self, schoolId: str, parentId: str, studentId: str, timeOfDayId: str
+    async def get_bus_info(schoolId: str, parentId: str, studentId: str, timeOfDayId: str
     ) -> GetStudentStops:
         """Return the bus info from the api."""
-        payload = self._get_soap_header()
+        payload = HcbSoapClient._get_soap_header()
         payload += '<s1158 xmlns="http://tempuri.org/">'
         payload += "<P1>" + schoolId + "</P1>"
         payload += "<P2>" + parentId + "</P2>"
@@ -105,12 +106,12 @@ class HcbSoapClient:
         payload += "<P8>14</P8>"
         payload += "<P9>english</P9>"
         payload += "</s1158>"
-        payload += self._get_soap_footer()
-        headers = self._get_standard_headers()
+        payload += HcbSoapClient._get_soap_footer()
+        headers = HcbSoapClient._get_standard_headers()
         headers["soapaction"] = "http://tempuri.org/ISynoviaApi/s1158"
         async with (
             aiohttp.ClientSession() as session,
-            session.post(self._url, data=payload, headers=headers) as response,
+            session.post(HcbSoapClient._url, data=payload, headers=headers) as response,
         ):
             if response.status != 200:
                 return None
@@ -118,11 +119,10 @@ class HcbSoapClient:
             root = S1158.from_dict(xmltodict.parse(text))
             return root.s_envelope.s_body.s1158_response.s1158_result.synovia_api.get_student_stops_and_scans.get_student_stops
 
-    async def test_connection(
-        self, school_code: str, user_name: str, password: str
+    async def test_connection(school_code: str, user_name: str, password: str
     ) -> bool:
         """Test the connection to the api."""
-        school = await self.get_school_info(school_code)
+        school = await HcbSoapClient.get_school_info(school_code)
         school_id = school.customer.id
-        userInfo = await self.get_parent_info(school_id, user_name, password)
+        userInfo = await HcbSoapClient.get_parent_info(school_id, user_name, password)
         return userInfo is not None
