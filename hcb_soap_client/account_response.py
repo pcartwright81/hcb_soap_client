@@ -47,8 +47,8 @@ class AccountResponse:
     """Parent account info."""
 
     account_id: str
-    students = list[Student]
-    times = list[TimeOfDay]
+    students: list[Student]
+    times: list[TimeOfDay]
 
     def __init__(self, text: str) -> None:
         """Create a new instance of from text."""
