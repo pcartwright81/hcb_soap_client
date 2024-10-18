@@ -1,33 +1,49 @@
+"""Connect to HCB soap api."""
+
 from xml.sax.saxutils import escape
 
 import aiohttp
 import xmltodict
 
-from .s1100 import S1100, ValidateCustomerAccountNumber
-from .s1157 import S1157, ParentLogin
-from .s1158 import S1158, GetStudentStops
+from .account_response import AccountResponse
+from .stop_response import StopResponse
 
 
 class HcbSoapClient:
-    _url = "https://api.synovia.com/SynoviaApi.svc"
+    """Define soap client."""
+
+    def __init__(self, url: str | None = None) -> None:
+        """Create and instance of the client."""
+        self._url = "https://api.synovia.com/SynoviaApi.svc"
+        if url is not None:
+            self._url = url
 
     AM_ID = "55632A13-35C5-4169-B872-F5ABDC25DF6A"
     PM_ID = "6E7A050E-0295-4200-8EDC-3611BB5DE1C1"
+    _soap_body_string = ""
+    _success = 200
 
-    def _get_soap_header(self) -> str:
+    @staticmethod
+    def _get_soap_header() -> str:
         """Return the soap header."""
         payload = '<?xml version="1.0" encoding="utf-8"?>'
-        payload += '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'
+        payload += (
+            '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+        )
+        payload += 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" '
+        payload += 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">'
         payload += "<soap:Body>"
         return payload
 
-    def _get_soap_footer(self) -> str:
+    @staticmethod
+    def _get_soap_footer() -> str:
         """Return the soap footer."""
         payload = "</soap:Body>"
         payload += "</soap:Envelope>"
         return payload
 
-    def _get_standard_headers(self) -> str:
+    @staticmethod
+    def _get_standard_headers() -> dict[str, str]:
         """Return standard headers."""
         return {
             "app-version": "3.6.0",
@@ -42,11 +58,11 @@ class HcbSoapClient:
             "cookie": "SRV=prdweb1",
         }
 
-    async def get_school_info(self, schoolCode: str) -> ValidateCustomerAccountNumber:
+    async def get_school_id(self, school_code: str) -> str:
         """Return the school info from the api."""
         payload = self._get_soap_header()
         payload += '<s1100 xmlns="http://tempuri.org/">'
-        payload += "<P1>" + schoolCode + "</P1>"
+        payload += "<P1>" + school_code + "</P1>"
         payload += "</s1100>"
         payload += self._get_soap_footer()
         headers = self._get_standard_headers()
@@ -55,19 +71,16 @@ class HcbSoapClient:
             aiohttp.ClientSession() as session,
             session.post(self._url, data=payload, headers=headers) as response,
         ):
-            if response.status != 200:
-                return None
-            text = await response.text()
-            root = S1100.from_dict(xmltodict.parse(text))
-            return root.s_envelope.s_body.s1100_response.s1100_result.synovia_api.validate_customer_account_number
+            response_text = await response.text()
+            return self._parse_school_id(response_text)
 
     async def get_parent_info(
-        self, schoolId: str, username: str, password: str
-    ) -> ParentLogin:
+        self, school_id: str, username: str, password: str
+    ) -> AccountResponse:
         """Return the user info from the api."""
         payload = self._get_soap_header()
         payload += '<s1157 xmlns="http://tempuri.org/">'
-        payload += "<P1>" + schoolId + "</P1>"
+        payload += "<P1>" + school_id + "</P1>"
         payload += "<P2>" + username + "</P2>"
         payload += "<P3>" + escape(password) + "</P3>"
         payload += "<P4>LookupItem_Source_Android</P4>"
@@ -83,22 +96,19 @@ class HcbSoapClient:
             aiohttp.ClientSession() as session,
             session.post(self._url, data=payload, headers=headers) as response,
         ):
-            if response.status != 200:
-                return None
-            text = await response.text()
-            root = S1157.from_dict(xmltodict.parse(text, force_list={"Student"}))
-            return root.s_envelope.s_body.s1157_response.s1157_result.synovia_api.parent_login
+            response_text = await response.text()
+            return AccountResponse(response_text)
 
-    async def get_bus_info(
-        self, schoolId: str, parentId: str, studentId: str, timeOfDayId: str
-    ) -> GetStudentStops:
+    async def get_stop_info(
+        self, school_id: str, parent_id: str, student_id: str, time_of_day_id: str
+    ) -> StopResponse:
         """Return the bus info from the api."""
         payload = self._get_soap_header()
         payload += '<s1158 xmlns="http://tempuri.org/">'
-        payload += "<P1>" + schoolId + "</P1>"
-        payload += "<P2>" + parentId + "</P2>"
-        payload += "<P3>" + studentId + "</P3>"
-        payload += "<P4>" + timeOfDayId + "</P4>"
+        payload += "<P1>" + school_id + "</P1>"
+        payload += "<P2>" + parent_id + "</P2>"
+        payload += "<P3>" + student_id + "</P3>"
+        payload += "<P4>" + time_of_day_id + "</P4>"
         payload += "<P5>true</P5>"
         payload += "<P6>false</P6>"
         payload += "<P7>10</P7>"
@@ -112,17 +122,19 @@ class HcbSoapClient:
             aiohttp.ClientSession() as session,
             session.post(self._url, data=payload, headers=headers) as response,
         ):
-            if response.status != 200:
-                return None
-            text = await response.text()
-            root = S1158.from_dict(xmltodict.parse(text))
-            return root.s_envelope.s_body.s1158_response.s1158_result.synovia_api.get_student_stops_and_scans.get_student_stops
+            response_text = await response.text()
+            return StopResponse.from_dict(response_text)
 
     async def test_connection(
         self, school_code: str, user_name: str, password: str
     ) -> bool:
         """Test the connection to the api."""
-        school = await self.get_school_info(school_code)
-        school_id = school.customer.id
-        userInfo = await self.get_parent_info(school_id, user_name, password)
-        return userInfo is not None
+        school_id = await self.get_school_id(school_code)
+        info = await self.get_parent_info(school_id, user_name, password)
+        return info.account_id is not None
+
+    def _parse_school_id(self, response_text: str) -> str:
+        data_dict = xmltodict.parse(response_text)
+        return data_dict["s:Envelope"]["s:Body"]["s1100Response"]["s1100Result"][
+            "SynoviaApi"
+        ]["ValidateCustomerAccountNumber"]["Customer"]["@ID"]
