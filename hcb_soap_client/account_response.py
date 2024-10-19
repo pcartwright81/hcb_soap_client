@@ -21,7 +21,7 @@ class Student:
         """Create a new instance of from a dictionary."""
         student_id = from_str(xml_dict.get("@EntityID"))
         first_name = from_str(xml_dict.get("@FirstName"))
-        last_name = from_str(xml_dict.get("@@LastName"))
+        last_name = from_str(xml_dict.get("@LastName"))
         return Student(student_id, first_name, last_name)
 
 
