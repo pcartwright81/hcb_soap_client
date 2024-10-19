@@ -159,14 +159,15 @@ class StopResponse:
     student_stops: list[StudentStop]
 
     @staticmethod
-    def from_dict(response_text: str) -> "StopResponse":
+    def from_text(response_text: str) -> "StopResponse":
         """Create a new instance of from text."""
         data = xmltodict.parse(response_text)
         data = data["s:Envelope"]["s:Body"]["s1158Response"]["s1158Result"][
             "SynoviaApi"
         ]["GetStudentStopsAndScans"]["GetStudentStops"]
         vehicle_location = VehicleLocation.from_dict(data.get("VehicleLocation"))
-        stops = from_list(
-            StudentStop.from_dict, data["StudentStops"].get("StudentStop")
-        )
+        stops = []
+        if data["StudentStops"] is not None:
+            student_stops = data["StudentStops"].get("StudentStop")
+            stops = from_list(StudentStop.from_dict, student_stops)
         return StopResponse(vehicle_location, stops)

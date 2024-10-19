@@ -6,7 +6,7 @@ import os
 from hcb_soap_client.hcb_soap_client import HcbSoapClient
 
 
-class TestProcess:
+class TestApi:
     """Test the process."""
 
     async def run_test(self) -> None:
@@ -26,5 +26,5 @@ class TestProcess:
         print(stops)  # noqa: T201
 
 
-test_process = TestProcess()
+test_process = TestApi()
 asyncio.run(test_process.run_test())
