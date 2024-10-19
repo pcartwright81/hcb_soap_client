@@ -14,13 +14,15 @@ class Student:
 
     student_id: str
     first_name: str
+    last_name: str
 
     @staticmethod
     def from_dict(xml_dict: dict) -> "Student":
         """Create a new instance of from a dictionary."""
         student_id = from_str(xml_dict.get("@EntityID"))
         first_name = from_str(xml_dict.get("@FirstName"))
-        return Student(student_id, first_name)
+        last_name = from_str(xml_dict.get("@@LastName"))
+        return Student(student_id, first_name, last_name)
 
 
 @dataclass
@@ -50,13 +52,13 @@ class AccountResponse:
     students: list[Student]
     times: list[TimeOfDay]
 
-    def __init__(self, text: str) -> None:
+    @staticmethod
+    def from_text(response_text: str) -> "AccountResponse":
         """Create a new instance of from text."""
-        data = xmltodict.parse(text, force_list={"Student"})
+        data = xmltodict.parse(response_text, force_list={"Student"})
         data = data["s:Envelope"]["s:Body"]["s1157Response"]
         data = data["s1157Result"]["SynoviaApi"]["ParentLogin"]
-        self.account_id = data["Account"]["@ID"]
-        self.students = from_list(
-            Student.from_dict, data["LinkedStudents"].get("Student")
-        )
-        self.times = from_list(TimeOfDay.from_dict, data["TimeOfDays"].get("TimeOfDay"))
+        account_id = data["Account"]["@ID"]
+        students = from_list(Student.from_dict, data["LinkedStudents"].get("Student"))
+        times = from_list(TimeOfDay.from_dict, data["TimeOfDays"].get("TimeOfDay"))
+        return AccountResponse(account_id, students, times)

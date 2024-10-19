@@ -97,7 +97,7 @@ class HcbSoapClient:
             session.post(self._url, data=payload, headers=headers) as response,
         ):
             response_text = await response.text()
-            return AccountResponse(response_text)
+            return AccountResponse.from_text(response_text)
 
     async def get_stop_info(
         self, school_id: str, parent_id: str, student_id: str, time_of_day_id: str
@@ -123,7 +123,7 @@ class HcbSoapClient:
             session.post(self._url, data=payload, headers=headers) as response,
         ):
             response_text = await response.text()
-            return StopResponse.from_dict(response_text)
+            return StopResponse.from_text(response_text)
 
     async def test_connection(
         self, school_code: str, user_name: str, password: str

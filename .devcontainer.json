@@ -27,6 +27,9 @@
             }
         }
     },
-    "remoteUser": "vscode",
-    "features": {}
+    "containerEnv": {
+        "HCB_USERNAME": " ${localEnv:HCB_USERNAME}",
+        "HCB_PASSWORD": "${localEnv:HCB_PASSWORD}",
+        "HCB_SCHOOLCODE": "${localEnv:HCB_SCHOOLCODE}",
+    },
 }
