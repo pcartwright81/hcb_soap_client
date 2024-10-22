@@ -24,6 +24,8 @@ class TestApi:
             school_id, parent_info.account_id, student_id, HcbSoapClient.PM_ID
         )
         print(stops)  # noqa: T201
+        test = await client.test_connection(school_code, user_name, password)
+        print(test)  # noqa: T201
 
 
 test_process = TestApi()
