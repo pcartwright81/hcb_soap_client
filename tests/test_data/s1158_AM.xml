@@ -20,13 +20,15 @@
                                     StopType="School" SubstituteVehicleName="" VehicleName="20-05"
                                     ArrivalTime="06:00:00"
                                     TimeOfDayId="55632A13-35C5-4169-B872-F5ABDC25DF6A"
-                                    TierStartTime="05:42:00" />
+                                    TierStartTime="05:42:00"
+                                    BusVisibilityStartOffset="0"/>
                                 <StudentStop Name="Circle K (AM)"
                                     Latitude="34.807730" Longitude="-86.749860" StartTime="07:00:00"
                                     StopType="Stop" SubstituteVehicleName="" VehicleName="20-05"
                                     ArrivalTime="06:05:00"
                                     TimeOfDayId="55632A13-35C5-4169-B872-F5ABDC25DF6A"
-                                    TierStartTime="05:42:00" />
+                                    TierStartTime="05:42:00"
+                                    BusVisibilityStartOffset="0"/>
                             </StudentStops>
                         </GetStudentStops>
                     </GetStudentStopsAndScans>
