@@ -9,7 +9,7 @@ with Path("README.md").open() as fh:
 
 setuptools.setup(
     name="hcb_soap_client",
-    version="0.0.6",
+    version="0.0.7",
     author="Patrick Cartwright",
     author_email="pcartwright1981@gmail.com",
     description="Soap client for Here Comes the Bus",
