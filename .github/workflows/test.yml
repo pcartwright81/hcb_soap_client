@@ -12,6 +12,7 @@ on:
 env:
   DEFAULT_PYTHON: "3.12"
 
+jobs:
   tests:
     runs-on: "ubuntu-latest"
     name: Run tests
