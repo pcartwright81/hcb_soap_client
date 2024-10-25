@@ -18,7 +18,7 @@ async def test_account_response(mock: MagicMock) -> None:
     session = MagicMock()
     session.post.return_value.__aenter__.return_value.status = 200
     session.post.return_value.__aenter__.return_value.text.return_value = _read_file(
-        "S1157.xml"
+        "s1157.xml"
     )
     mock.return_value.__aenter__.return_value = session
     client = HcbSoapClient()

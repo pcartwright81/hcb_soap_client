@@ -32,7 +32,7 @@ class StudentStop:
     time_of_day_id: str
     vehicle_id: str
     esn: str
-    tier_start_time: datetime
+    tier_start_time: time
     bus_visibility_start_offset: int
 
     @staticmethod
@@ -50,7 +50,7 @@ class StudentStop:
         time_of_day_id = from_str(xml_dict.get("@TimeOfDayId"))
         vehicle_id = from_str(xml_dict.get("@VehicleId"))
         esn = from_str(xml_dict.get("@Esn"))
-        tier_start_time = from_datetime(xml_dict.get("@TierStartTime"))
+        tier_start_time = from_time(xml_dict.get("@TierStartTime"))
         bus_visibility_start_offset = from_int(
             xml_dict.get("@BusVisibilityStartOffset")
         )
