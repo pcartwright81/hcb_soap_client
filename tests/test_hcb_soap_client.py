@@ -60,6 +60,7 @@ async def test_get_stop_info(mock: MagicMock) -> None:
     response = await client.get_stop_info(
         SCHOOL_ID, ACCOUNT_ID, STUDENT_ONE_ID, HcbSoapClient.AM_ID
     )
+    assert response.vehicle_location is not None
     assert response.vehicle_location.address != ""
     expected_stops = 2
     assert len(response.student_stops) == expected_stops

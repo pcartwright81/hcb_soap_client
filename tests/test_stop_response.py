@@ -11,6 +11,7 @@ def test_stop_response_from_dict_am() -> None:
     response_text = read_file("s1158_AM.xml")
 
     stop_response = StopResponse.from_text(response_text)
+    assert stop_response.vehicle_location is not None
     assert stop_response.vehicle_location.name == "20-05"
     assert stop_response.vehicle_location.latitude == 34.7902536
     assert stop_response.vehicle_location.longitude == -86.782654999999991
@@ -74,6 +75,7 @@ def test_stop_response_from_dict_pm() -> None:
     """Test the from text."""
     response_text = read_file("s1158_PM.xml")
     stop_response = StopResponse.from_text(response_text)
+    assert stop_response.vehicle_location is not None
     assert stop_response.vehicle_location.name == "20-05"
     assert stop_response.vehicle_location.latitude == 34.7902536
     assert stop_response.vehicle_location.longitude == -86.782654999999991
