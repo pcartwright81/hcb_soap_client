@@ -40,7 +40,7 @@ class TimeOfDay:
         _id = from_str(xml_dict.get("@ID"))
         name = from_str(xml_dict.get("@Name"))
         begin_time = from_time(xml_dict.get("@BeginTime"))
-        end_time = from_time(xml_dict.get("@BeginTime"))
+        end_time = from_time(xml_dict.get("@EndTime"))
         return TimeOfDay(_id, name, begin_time, end_time)
 
 

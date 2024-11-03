@@ -7,7 +7,7 @@ import pytest
 from hcb_soap_client.hcb_soap_client import HcbSoapClient
 
 
-@pytest.mark.asyncio
+@pytest.mark.skip(reason="Live testing disabled.")
 async def test_async() -> None:
     """Run the async test process."""
     client = HcbSoapClient()
@@ -34,8 +34,4 @@ async def test_async() -> None:
     )
     if len(stops.student_stops) == 0:
         msg = "No stops found."
-        raise ValueError(msg)
-    test = await client.test_connection(school_code, user_name, password)
-    if not test:
-        msg = "Test connection failed."
         raise ValueError(msg)

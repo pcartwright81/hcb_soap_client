@@ -25,3 +25,9 @@ keep-runtime-typing = true
 
 [lint.mccabe]
 max-complexity = 25
+
+[lint.per-file-ignores]
+# Ignore `S101` (use of assert)` and `SLF001` (private members)` in path/to/file.py`.
+"tests/test_account_response.py" = ["S101"]
+"tests/test_stop_response.py" = ["S101","DTZ001","PLR2004"]
+"tests/test_hcb_soap_client.py" = ["S101","SLF001"]
