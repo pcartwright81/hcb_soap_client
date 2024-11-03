@@ -118,7 +118,7 @@ class VehicleLocation:
         self.display_on_map = display_on_map
 
     @staticmethod
-    def from_dict(xml_dict: dict) -> "VehicleLocation":
+    def from_dict(xml_dict: dict | None) -> "VehicleLocation | None":
         """Create a new instance from a dictionary."""
         if xml_dict is None:
             return None
@@ -155,7 +155,7 @@ class VehicleLocation:
 class StopResponse:
     """Define a stop object."""
 
-    vehicle_location: VehicleLocation
+    vehicle_location: VehicleLocation | None
     student_stops: list[StudentStop]
 
     @staticmethod

@@ -125,14 +125,6 @@ class HcbSoapClient:
             response_text = await response.text()
             return StopResponse.from_text(response_text)
 
-    async def test_connection(
-        self, school_code: str, user_name: str, password: str
-    ) -> bool:
-        """Test the connection to the api."""
-        school_id = await self.get_school_id(school_code)
-        info = await self.get_parent_info(school_id, user_name, password)
-        return info.account_id is not None
-
     def _parse_school_id(self, response_text: str) -> str:
         data_dict = xmltodict.parse(response_text)
         return data_dict["s:Envelope"]["s:Body"]["s1100Response"]["s1100Result"][
