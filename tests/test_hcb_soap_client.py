@@ -78,9 +78,11 @@ def test_init() -> None:
     client = HcbSoapClient(None)
     assert client._url == "https://api.synovia.com/SynoviaApi.svc"
 
+
 def test_from_int_with_empty_string() -> None:
     """Test the from_int function with an empty string."""
     assert from_int("") == 0
+
 
 def test_from_float_with_empty_string() -> None:
     """Test the from_int function with an empty string."""
