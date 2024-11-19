@@ -26,12 +26,18 @@ def from_time(x: Any) -> time:
 
 def from_float(x: Any) -> float:
     """Get a float from an object."""
-    return float(from_str(x))
+    value = from_str(x)
+    if value == "":
+        return 0
+    return float(value)
 
 
 def from_int(x: Any) -> int:
     """Get an int from an object."""
-    return int(from_str(x))
+    value = from_str(x)
+    if value == "":
+        return 0
+    return int(value)
 
 
 def from_bool(x: Any) -> bool:
