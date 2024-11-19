@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from hcb_soap_client import from_float, from_int
 from hcb_soap_client.hcb_soap_client import HcbSoapClient
 from tests.test_data.const import (
     ACCOUNT_ID,
@@ -76,3 +77,13 @@ def test_init() -> None:
 
     client = HcbSoapClient(None)
     assert client._url == "https://api.synovia.com/SynoviaApi.svc"
+
+
+def test_from_int_with_empty_string() -> None:
+    """Test the from_int function with an empty string."""
+    assert from_int("") == 0
+
+
+def test_from_float_with_empty_string() -> None:
+    """Test the from_int function with an empty string."""
+    assert from_float("") == 0

@@ -129,11 +129,11 @@ class VehicleLocation:
         log_time = from_datetime(xml_dict.get("@LogTime"))
         ignition = from_bool(xml_dict.get("@Ignition"))
         latent = from_bool(xml_dict.get("@Latent"))
-        time_zone_offset = int(from_str(xml_dict.get("@TimeZoneOffset")))
+        time_zone_offset = from_int(xml_dict.get("@TimeZoneOffset"))
         heading = from_str(xml_dict.get("@Heading"))
-        speed = from_int(from_str(xml_dict.get("@Speed")))
+        speed = from_int(xml_dict.get("@Speed"))
         address = from_str(xml_dict.get("@Address"))
-        message_code = from_int(from_str(xml_dict.get("@MessageCode")))
+        message_code = from_int(xml_dict.get("@MessageCode"))
         display_on_map = from_bool(xml_dict.get("@DisplayOnMap"))
         return VehicleLocation(
             name,
