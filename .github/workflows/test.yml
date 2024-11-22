@@ -28,12 +28,7 @@ jobs:
           pip install pip
           pip install -r requirements_test.txt
       - name: Tests suite
-        env:
-          HCB_SCHOOLCODE: ${{ secrets.HCB_SCHOOLCODE }}
-          HCB_USERNAME: ${{ secrets.HCB_USERNAME }}
-          HCB_PASSWORD: ${{ secrets.HCB_PASSWORD }}
-        run: |
-          pytest -p no:sugar
+        run: pytest -p no:sugar
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5.0.2
         with:
