@@ -46,6 +46,6 @@ def from_bool(x: Any) -> bool:
     return string.startswith("Y")
 
 
-def from_list(f: Callable[[Any], T], x: Any) -> list[T]:
+def from_list[T](f: Callable[[Any], T], x: Any) -> list[T]:
     """Get a list."""
     return [f(y) for y in x]
