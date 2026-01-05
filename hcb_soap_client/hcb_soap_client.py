@@ -3,7 +3,7 @@
 from xml.sax.saxutils import escape
 
 import aiohttp
-import xmltodict
+from lxml import etree
 
 from .account_response import AccountResponse
 from .stop_response import StopResponse
@@ -126,7 +126,7 @@ class HcbSoapClient:
             return StopResponse.from_text(response_text)
 
     def _parse_school_id(self, response_text: str) -> str:
-        data_dict = xmltodict.parse(response_text)
-        return data_dict["s:Envelope"]["s:Body"]["s1100Response"]["s1100Result"][
-            "SynoviaApi"
-        ]["ValidateCustomerAccountNumber"]["Customer"]["@ID"]
+        """Parse the school ID from XML response using XPath."""
+        root = etree.fromstring(response_text.encode())  # noqa: S320
+        result = root.xpath("//*[local-name()='Customer']/@ID")
+        return result[0] if result else ""

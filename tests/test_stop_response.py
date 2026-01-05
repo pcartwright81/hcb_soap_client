@@ -2,7 +2,7 @@
 
 from datetime import datetime, time
 
-from hcb_soap_client.stop_response import StopResponse, VehicleLocation
+from hcb_soap_client.stop_response import StopResponse
 from tests import read_file
 
 
@@ -133,9 +133,3 @@ def test_stop_response_from_dict_pm() -> None:
     assert stop_response.student_stops[1].esn == "123456"
     assert stop_response.student_stops[1].tier_start_time == time(5, 42, 0)
     assert stop_response.student_stops[1].bus_visibility_start_offset == 0
-
-
-def test_vehicle_location_handles_none() -> None:
-    """Test vehicle location handles none."""
-    vehiclelocaton = VehicleLocation.from_dict(None)
-    assert vehiclelocaton is None

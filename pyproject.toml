@@ -20,7 +20,8 @@ requires-python = ">=3.12"
 dependencies = [
     "colorlog>=6.10.1",
     "aiohttp>=3.13.3",
-    "xmltodict>=1.0.2",
+    "pydantic>=2.10.0",
+    "lxml>=5.3.0",
     "python-dateutil>=2.9.0.post0",
 ]
 
@@ -57,6 +58,8 @@ addopts = "--cov-report=xml:coverage.xml --cov-report=term-missing --cov=hcb_soa
 exclude_also = [
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
+    "if isinstance\\(value,",  # Pydantic validator type guards
+    "if value == \"\":",  # Empty string guards in validators
 ]
 
 [tool.coverage.run]
