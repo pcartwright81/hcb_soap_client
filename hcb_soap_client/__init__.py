@@ -4,6 +4,8 @@ from datetime import time
 
 from lxml import etree
 
+_MIN_PARTS_WITH_SECONDS = 3
+
 
 def xpath_attr(root: etree._Element, expr: str) -> str:
     """Get first attribute result from XPath expression, or empty string."""
@@ -30,7 +32,7 @@ def parse_time_str(value: str | time) -> time:
     return time(
         hour=int(parts[0]),
         minute=int(parts[1]),
-        second=int(parts[2]) if len(parts) > 2 else 0,
+        second=int(parts[2]) if len(parts) >= _MIN_PARTS_WITH_SECONDS else 0,
     )
 
 

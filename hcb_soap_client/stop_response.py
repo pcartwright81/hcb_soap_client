@@ -111,13 +111,16 @@ class StopResponse(BaseModel):
     @classmethod
     def from_text(cls, response_text: str) -> Self:
         """Create a new instance from text."""
-        root = etree.fromstring(response_text.encode())  # noqa: S320
+        root = etree.fromstring(response_text.encode())
 
         vehicle_elem = xpath_element(root, "//*[local-name()='VehicleLocation']")
-        vehicle_location = VehicleLocation.from_element(vehicle_elem) if vehicle_elem is not None else None
+        vehicle_location = (
+            VehicleLocation.from_element(vehicle_elem)
+            if vehicle_elem is not None
+            else None
+        )
 
-        student_stops = [
-            StudentStop.from_element(e) for e in xpath_elements(root, "//*[local-name()='StudentStop']")
-        ]
+        stop_elements = xpath_elements(root, "//*[local-name()='StudentStop']")
+        student_stops = [StudentStop.from_element(e) for e in stop_elements]
 
         return cls(vehicle_location=vehicle_location, student_stops=student_stops)

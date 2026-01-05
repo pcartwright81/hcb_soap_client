@@ -1,7 +1,6 @@
 """Test the hcb soap client."""
 
-from unittest.mock import MagicMock, patch
-
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from hcb_soap_client.hcb_soap_client import HcbSoapClient
 from tests.test_data.const import (
@@ -14,8 +13,6 @@ from tests.test_data.const import (
 )
 
 from . import read_file
-
-_empty = ""
 
 
 @patch("hcb_soap_client.hcb_soap_client.aiohttp.ClientSession")
@@ -71,6 +68,7 @@ def test_init() -> None:
     """Test the init."""
     client = HcbSoapClient()
     assert client._url == "https://api.synovia.com/SynoviaApi.svc"
+    assert client._owns_session is True
 
     client = HcbSoapClient("http://test.url")
     assert client._url == "http://test.url"
@@ -78,4 +76,52 @@ def test_init() -> None:
     client = HcbSoapClient(None)
     assert client._url == "https://api.synovia.com/SynoviaApi.svc"
 
+    # Test with provided session
+    mock_session = MagicMock()
+    client = HcbSoapClient(session=mock_session)
+    assert client._session is mock_session
+    assert client._owns_session is False
 
+
+@patch("hcb_soap_client.hcb_soap_client.aiohttp.ClientSession")
+async def test_context_manager(mock: MagicMock) -> None:
+    """Test the async context manager creates and closes session."""
+    mock_session = MagicMock()
+    mock_session.close = AsyncMock(return_value=None)
+    mock.return_value = mock_session
+
+    async with HcbSoapClient() as client:
+        assert client._session is mock_session
+        mock.assert_called_once()
+
+    mock_session.close.assert_called_once()
+    assert client._session is None
+
+
+async def test_context_manager_with_provided_session() -> None:
+    """Test context manager does not close a provided session."""
+    mock_session = MagicMock()
+    mock_session.close = AsyncMock(return_value=None)
+
+    async with HcbSoapClient(session=mock_session) as client:
+        # Session should not be replaced
+        assert client._session is mock_session
+
+    # Should not close provided session
+    mock_session.close.assert_not_called()
+
+
+@patch("hcb_soap_client.hcb_soap_client.aiohttp.ClientSession")
+async def test_get_school_id_with_session(mock: MagicMock) -> None:
+    """Test API call using context manager with reused session."""
+    mock_session = MagicMock()
+    mock_session.post.return_value.__aenter__.return_value.status = 200
+    mock_session.post.return_value.__aenter__.return_value.text.return_value = (
+        read_file("s1100.xml")
+    )
+    mock_session.close = AsyncMock(return_value=None)
+    mock.return_value = mock_session
+
+    async with HcbSoapClient() as client:
+        response = await client.get_school_id(SCHOOL_CODE)
+        assert response == SCHOOL_ID

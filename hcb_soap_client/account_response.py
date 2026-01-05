@@ -58,14 +58,12 @@ class AccountResponse(BaseModel):
     @classmethod
     def from_text(cls, response_text: str) -> Self:
         """Create a new instance from text."""
-        root = etree.fromstring(response_text.encode())  # noqa: S320
+        root = etree.fromstring(response_text.encode())
 
         account_id = xpath_attr(root, "//*[local-name()='Account']/@ID")
-        students = [
-            Student.from_element(e) for e in xpath_elements(root, "//*[local-name()='Student']")
-        ]
-        times = [
-            TimeOfDay.from_element(e) for e in xpath_elements(root, "//*[local-name()='TimeOfDay']")
-        ]
+        student_elements = xpath_elements(root, "//*[local-name()='Student']")
+        students = [Student.from_element(e) for e in student_elements]
+        time_elements = xpath_elements(root, "//*[local-name()='TimeOfDay']")
+        times = [TimeOfDay.from_element(e) for e in time_elements]
 
         return cls(account_id=account_id, students=students, times=times)
