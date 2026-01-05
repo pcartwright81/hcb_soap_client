@@ -1,64 +1,50 @@
 """Define a stop object."""
 
 from datetime import datetime, time
-from typing import Self
+from typing import Annotated, Self
 
 from dateutil import parser
 from lxml import etree
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, BeforeValidator
+
+from . import parse_time_str, parse_yn_bool, xpath_element, xpath_elements
+
+# Type aliases for cleaner field definitions
+TimeStr = Annotated[time, BeforeValidator(parse_time_str)]
+YNBool = Annotated[bool, BeforeValidator(parse_yn_bool)]
 
 
-def _xpath_element(root: etree._Element, expr: str) -> etree._Element | None:
-    """Get first element from XPath expression, or None."""
-    result = root.xpath(expr)
-    return result[0] if result else None
+def _parse_float(value: str) -> float:
+    """Parse float from string, defaulting to 0 for empty."""
+    return 0.0 if value == "" else float(value)
 
 
-def _xpath_elements(root: etree._Element, expr: str) -> list[etree._Element]:
-    """Get elements from XPath expression."""
-    return root.xpath(expr)
+def _parse_datetime(value: str) -> datetime:
+    """Parse datetime string."""
+    return parser.parse(value)
+
+
+FloatStr = Annotated[float, BeforeValidator(_parse_float)]
+DateTimeStr = Annotated[datetime, BeforeValidator(_parse_datetime)]
 
 
 class StudentStop(BaseModel):
     """Define a student stop."""
 
     name: str
-    latitude: float
-    longitude: float
-    start_time: time
+    latitude: FloatStr
+    longitude: FloatStr
+    start_time: TimeStr
     stop_type: str
     substitute_vehicle_name: str
     vehicle_name: str
     stop_id: str
-    arrival_time: time
+    arrival_time: TimeStr
     time_of_day_id: str
     vehicle_id: str
     esn: str
-    tier_start_time: time
+    tier_start_time: TimeStr
     bus_visibility_start_offset: int
-
-    @field_validator("start_time", "arrival_time", "tier_start_time", mode="before")
-    @classmethod
-    def parse_time(cls, value: str | time) -> time:
-        """Parse time string to time object."""
-        if isinstance(value, time):
-            return value
-        parts = value.split(":")
-        return time(
-            hour=int(parts[0]),
-            minute=int(parts[1]),
-            second=int(parts[2]) if len(parts) > 2 else 0,
-        )
-
-    @field_validator("latitude", "longitude", mode="before")
-    @classmethod
-    def parse_float(cls, value: str | float) -> float:
-        """Parse float from string, defaulting to 0 for empty."""
-        if isinstance(value, float):
-            return value
-        if value == "":
-            return 0.0
-        return float(value)
 
     @classmethod
     def from_element(cls, elem: etree._Element) -> "StudentStop":
@@ -85,43 +71,17 @@ class VehicleLocation(BaseModel):
     """Define a student vehicle location."""
 
     name: str
-    latitude: float
-    longitude: float
-    log_time: datetime
-    ignition: bool
-    latent: bool
+    latitude: FloatStr
+    longitude: FloatStr
+    log_time: DateTimeStr
+    ignition: YNBool
+    latent: YNBool
     time_zone_offset: int
     heading: str
     speed: int
     address: str
     message_code: int
-    display_on_map: bool
-
-    @field_validator("log_time", mode="before")
-    @classmethod
-    def parse_datetime(cls, value: str | datetime) -> datetime:
-        """Parse datetime string."""
-        if isinstance(value, datetime):
-            return value
-        return parser.parse(value)
-
-    @field_validator("ignition", "latent", "display_on_map", mode="before")
-    @classmethod
-    def parse_bool(cls, value: str | bool) -> bool:
-        """Parse Y/N or Yes/No to bool."""
-        if isinstance(value, bool):
-            return value
-        return str(value).upper().startswith("Y")
-
-    @field_validator("latitude", "longitude", mode="before")
-    @classmethod
-    def parse_float(cls, value: str | float) -> float:
-        """Parse float from string, defaulting to 0 for empty."""
-        if isinstance(value, float):
-            return value
-        if value == "":
-            return 0.0
-        return float(value)
+    display_on_map: YNBool
 
     @classmethod
     def from_element(cls, elem: etree._Element) -> "VehicleLocation":
@@ -153,16 +113,11 @@ class StopResponse(BaseModel):
         """Create a new instance from text."""
         root = etree.fromstring(response_text.encode())  # noqa: S320
 
-        # Use local-name() to ignore namespaces
-        vehicle_elem = _xpath_element(root, "//*[local-name()='VehicleLocation']")
-        vehicle_location = (
-            VehicleLocation.from_element(vehicle_elem) if vehicle_elem is not None else None
-        )
+        vehicle_elem = xpath_element(root, "//*[local-name()='VehicleLocation']")
+        vehicle_location = VehicleLocation.from_element(vehicle_elem) if vehicle_elem is not None else None
 
-        stop_elems = _xpath_elements(root, "//*[local-name()='StudentStop']")
-        student_stops = [StudentStop.from_element(elem) for elem in stop_elems]
+        student_stops = [
+            StudentStop.from_element(e) for e in xpath_elements(root, "//*[local-name()='StudentStop']")
+        ]
 
-        return cls(
-            vehicle_location=vehicle_location,
-            student_stops=student_stops,
-        )
+        return cls(vehicle_location=vehicle_location, student_stops=student_stops)

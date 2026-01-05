@@ -1,21 +1,15 @@
 """Class for the account info."""
 
 from datetime import time
-from typing import Self
+from typing import Annotated, Self
 
 from lxml import etree
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, BeforeValidator
 
+from . import parse_time_str, xpath_attr, xpath_elements
 
-def _xpath_attr(root: etree._Element, expr: str) -> str:
-    """Get first attribute result from XPath expression, or empty string."""
-    result = root.xpath(expr)
-    return result[0] if result else ""
-
-
-def _xpath_elements(root: etree._Element, expr: str) -> list[etree._Element]:
-    """Get elements from XPath expression."""
-    return root.xpath(expr)
+# Type aliases for cleaner field definitions
+TimeStr = Annotated[time, BeforeValidator(parse_time_str)]
 
 
 class Student(BaseModel):
@@ -40,21 +34,8 @@ class TimeOfDay(BaseModel):
 
     id: str
     name: str
-    begin_time: time
-    end_time: time
-
-    @field_validator("begin_time", "end_time", mode="before")
-    @classmethod
-    def parse_time(cls, value: str | time) -> time:
-        """Parse time string to time object."""
-        if isinstance(value, time):
-            return value
-        parts = value.split(":")
-        return time(
-            hour=int(parts[0]),
-            minute=int(parts[1]),
-            second=int(parts[2]) if len(parts) > 2 else 0,
-        )
+    begin_time: TimeStr
+    end_time: TimeStr
 
     @classmethod
     def from_element(cls, elem: etree._Element) -> "TimeOfDay":
@@ -79,17 +60,12 @@ class AccountResponse(BaseModel):
         """Create a new instance from text."""
         root = etree.fromstring(response_text.encode())  # noqa: S320
 
-        # Use local-name() to ignore namespaces
-        account_id = _xpath_attr(root, "//*[local-name()='Account']/@ID")
+        account_id = xpath_attr(root, "//*[local-name()='Account']/@ID")
+        students = [
+            Student.from_element(e) for e in xpath_elements(root, "//*[local-name()='Student']")
+        ]
+        times = [
+            TimeOfDay.from_element(e) for e in xpath_elements(root, "//*[local-name()='TimeOfDay']")
+        ]
 
-        student_elems = _xpath_elements(root, "//*[local-name()='Student']")
-        students = [Student.from_element(elem) for elem in student_elems]
-
-        time_elems = _xpath_elements(root, "//*[local-name()='TimeOfDay']")
-        times = [TimeOfDay.from_element(elem) for elem in time_elems]
-
-        return cls(
-            account_id=account_id,
-            students=students,
-            times=times,
-        )
+        return cls(account_id=account_id, students=students, times=times)
