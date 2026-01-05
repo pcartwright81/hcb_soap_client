@@ -4,6 +4,10 @@ from datetime import time
 
 from lxml import etree
 
+# Public API exports - must be after utility functions are defined
+# to avoid circular imports, so we import at module level but define
+# utilities first inline
+
 _MIN_PARTS_WITH_SECONDS = 3
 
 
@@ -39,3 +43,17 @@ def parse_time_str(value: str | time) -> time:
 def parse_yn_bool(value: str) -> bool:
     """Parse Y/N or Yes/No string to bool."""
     return str(value).upper().startswith("Y")
+
+
+# ruff: noqa: E402
+# Public API exports - placed after utility definitions to avoid circular imports
+from .account_response import AccountResponse
+from .hcb_soap_client import HcbApiError, HcbSoapClient
+from .stop_response import StopResponse
+
+__all__ = [
+    "AccountResponse",
+    "HcbApiError",
+    "HcbSoapClient",
+    "StopResponse",
+]

@@ -24,9 +24,7 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Install requirements
-        run: |
-          pip install pip
-          pip install -r requirements_test.txt
+        run: pip install -e ".[test]"
       - name: Tests suite
         run: pytest -p no:sugar
       - name: Upload coverage to Codecov
