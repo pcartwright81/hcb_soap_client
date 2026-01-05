@@ -11,6 +11,9 @@ from . import xpath_attr
 from .account_response import AccountResponse
 from .stop_response import StopResponse
 
+# App version used in headers and parameters
+APP_VERSION = "3.6.0"
+
 # Namespace definitions
 SOAP_NS = "http://schemas.xmlsoap.org/soap/envelope/"
 TEMPURI_NS = "http://tempuri.org/"
@@ -20,10 +23,10 @@ SOAP = ElementMaker(namespace=SOAP_NS, nsmap={"soap": SOAP_NS})
 TEMPURI = ElementMaker(namespace=TEMPURI_NS, nsmap={None: TEMPURI_NS})
 
 DEFAULT_HEADERS = {
-    "app-version": "3.6.0",
+    "app-version": APP_VERSION,
     "app-name": "hctb",
-    "client-version": "3.6.0",
-    "user-agent": "hctb/3.6.0 App-Press/3.6.0",
+    "client-version": APP_VERSION,
+    "user-agent": f"hctb/{APP_VERSION} App-Press/{APP_VERSION}",
     "cache-control": "no-cache",
     "content-type": "text/xml",
     "host": "api.synovia.com",
@@ -31,6 +34,15 @@ DEFAULT_HEADERS = {
     "accept-encoding": "gzip",
     "cookie": "SRV=prdweb1",
 }
+
+
+class HcbApiError(Exception):
+    """Exception raised when the HCB API returns an error."""
+
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        """Initialize the exception."""
+        super().__init__(message)
+        self.status_code = status_code
 
 
 def _build_soap_envelope(method: str, params: list[tuple[str, str]]) -> bytes:
@@ -91,6 +103,7 @@ class HcbSoapClient:
             async with self._session.post(
                 self._url, data=payload, headers=headers
             ) as response:
+                await self._check_response(response)
                 return await response.text()
 
         # Fallback: create session for single request (less efficient)
@@ -98,7 +111,15 @@ class HcbSoapClient:
             aiohttp.ClientSession() as session,
             session.post(self._url, data=payload, headers=headers) as response,
         ):
+            await self._check_response(response)
             return await response.text()
+
+    async def _check_response(self, response: aiohttp.ClientResponse) -> None:
+        """Check the response for errors and raise if necessary."""
+        if response.status >= 400:  # noqa: PLR2004
+            text = await response.text()
+            msg = f"API request failed with status {response.status}: {text[:200]}"
+            raise HcbApiError(msg, status_code=response.status)
 
     async def get_school_id(self, school_code: str) -> str:
         """Return the school ID from the api."""
@@ -116,7 +137,7 @@ class HcbSoapClient:
             ("P3", password),
             ("P4", "LookupItem_Source_Android"),
             ("P5", "Android"),
-            ("P6", "3.6.0"),
+            ("P6", APP_VERSION),
             ("P7", ""),
         ]
         response_text = await self._request("s1157", params)
