@@ -1,1 +1,19 @@
 *__pycache__
+hcb_soap_client.egg-info/*
+
+# Coverage
+.coverage
+coverage.xml
+
+# Pytest cache
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+cov.txt

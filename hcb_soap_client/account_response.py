@@ -1,64 +1,69 @@
 """Class for the account info."""
 
-from dataclasses import dataclass
 from datetime import time
+from typing import Annotated, Self
 
-import xmltodict
+from lxml import etree
+from pydantic import BaseModel, BeforeValidator
 
-from . import from_list, from_str, from_time
+from . import parse_time_str, xpath_attr, xpath_elements
+
+# Type aliases for cleaner field definitions
+TimeStr = Annotated[time, BeforeValidator(parse_time_str)]
 
 
-@dataclass
-class Student:
+class Student(BaseModel):
     """Info for the student."""
 
     student_id: str
     first_name: str
     last_name: str
 
-    @staticmethod
-    def from_dict(xml_dict: dict) -> "Student":
-        """Create a new instance of from a dictionary."""
-        student_id = from_str(xml_dict.get("@EntityID"))
-        first_name = from_str(xml_dict.get("@FirstName"))
-        last_name = from_str(xml_dict.get("@LastName"))
-        return Student(student_id, first_name, last_name)
+    @classmethod
+    def from_element(cls, elem: etree._Element) -> "Student":
+        """Create from lxml element."""
+        return cls(
+            student_id=elem.get("EntityID", ""),
+            first_name=elem.get("FirstName", ""),
+            last_name=elem.get("LastName", ""),
+        )
 
 
-@dataclass
-class TimeOfDay:
+class TimeOfDay(BaseModel):
     """The time of day list."""
 
     id: str
     name: str
-    begin_time: time
-    end_time: time
+    begin_time: TimeStr
+    end_time: TimeStr
 
-    @staticmethod
-    def from_dict(xml_dict: dict) -> "TimeOfDay":
-        """Create a new instance of from a dictionary."""
-        _id = from_str(xml_dict.get("@ID"))
-        name = from_str(xml_dict.get("@Name"))
-        begin_time = from_time(xml_dict.get("@BeginTime"))
-        end_time = from_time(xml_dict.get("@EndTime"))
-        return TimeOfDay(_id, name, begin_time, end_time)
+    @classmethod
+    def from_element(cls, elem: etree._Element) -> "TimeOfDay":
+        """Create from lxml element."""
+        return cls(
+            id=elem.get("ID", ""),
+            name=elem.get("Name", ""),
+            begin_time=elem.get("BeginTime", "00:00:00"),
+            end_time=elem.get("EndTime", "00:00:00"),
+        )
 
 
-@dataclass
-class AccountResponse:
+class AccountResponse(BaseModel):
     """Parent account info."""
 
     account_id: str
     students: list[Student]
     times: list[TimeOfDay]
 
-    @staticmethod
-    def from_text(response_text: str) -> "AccountResponse":
-        """Create a new instance of from text."""
-        data = xmltodict.parse(response_text, force_list={"Student"})
-        data = data["s:Envelope"]["s:Body"]["s1157Response"]
-        data = data["s1157Result"]["SynoviaApi"]["ParentLogin"]
-        account_id = data["Account"]["@ID"]
-        students = from_list(Student.from_dict, data["LinkedStudents"].get("Student"))
-        times = from_list(TimeOfDay.from_dict, data["TimeOfDays"].get("TimeOfDay"))
-        return AccountResponse(account_id, students, times)
+    @classmethod
+    def from_text(cls, response_text: str) -> Self:
+        """Create a new instance from text."""
+        root = etree.fromstring(response_text.encode())
+
+        account_id = xpath_attr(root, "//*[local-name()='Account']/@ID")
+        student_elements = xpath_elements(root, "//*[local-name()='Student']")
+        students = [Student.from_element(e) for e in student_elements]
+        time_elements = xpath_elements(root, "//*[local-name()='TimeOfDay']")
+        times = [TimeOfDay.from_element(e) for e in time_elements]
+
+        return cls(account_id=account_id, students=students, times=times)

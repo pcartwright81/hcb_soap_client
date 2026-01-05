@@ -1,51 +1,59 @@
 """Init file for the soap client."""
 
-from collections.abc import Callable
-from datetime import datetime, time
-from typing import Any, TypeVar
+from datetime import time
 
-from dateutil import parser
+from lxml import etree
 
-T = TypeVar("T")
+# Public API exports - must be after utility functions are defined
+# to avoid circular imports, so we import at module level but define
+# utilities first inline
 
-
-def from_str(x: Any) -> str:
-    """Get a string from an object."""
-    return x
+_MIN_PARTS_WITH_SECONDS = 3
 
 
-def from_datetime(x: Any) -> datetime:
-    """Get a datetime from an object."""
-    return parser.parse(x)
+def xpath_attr(root: etree._Element, expr: str) -> str:
+    """Get first attribute result from XPath expression, or empty string."""
+    result = root.xpath(expr)
+    return result[0] if result else ""
 
 
-def from_time(x: Any) -> time:
-    """Get a datetime from an object."""
-    return from_datetime(x).time()
+def xpath_element(root: etree._Element, expr: str) -> etree._Element | None:
+    """Get first element from XPath expression, or None."""
+    result = root.xpath(expr)
+    return result[0] if result else None
 
 
-def from_float(x: Any) -> float:
-    """Get a float from an object."""
-    value = from_str(x)
-    if value == "":
-        return 0
-    return float(value)
+def xpath_elements(root: etree._Element, expr: str) -> list[etree._Element]:
+    """Get elements from XPath expression."""
+    return root.xpath(expr)
 
 
-def from_int(x: Any) -> int:
-    """Get an int from an object."""
-    value = from_str(x)
-    if value == "":
-        return 0
-    return int(value)
+def parse_time_str(value: str | time) -> time:
+    """Parse time string (HH:MM:SS) to time object."""
+    if isinstance(value, time):
+        return value
+    parts = value.split(":")
+    return time(
+        hour=int(parts[0]),
+        minute=int(parts[1]),
+        second=int(parts[2]) if len(parts) >= _MIN_PARTS_WITH_SECONDS else 0,
+    )
 
 
-def from_bool(x: Any) -> bool:
-    """Get a bool from an object."""
-    string = from_str(x)
-    return string.startswith("Y")
+def parse_yn_bool(value: str) -> bool:
+    """Parse Y/N or Yes/No string to bool."""
+    return str(value).upper().startswith("Y")
 
 
-def from_list[T](f: Callable[[Any], T], x: Any) -> list[T]:
-    """Get a list."""
-    return [f(y) for y in x]
+# ruff: noqa: E402
+# Public API exports - placed after utility definitions to avoid circular imports
+from .account_response import AccountResponse
+from .hcb_soap_client import HcbApiError, HcbSoapClient
+from .stop_response import StopResponse
+
+__all__ = [
+    "AccountResponse",
+    "HcbApiError",
+    "HcbSoapClient",
+    "StopResponse",
+]
