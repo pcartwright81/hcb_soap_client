@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hcb_soap_client"
-version = "0.1.3"
+version = "0.1.4"
 description = "Soap client for Here Comes the Bus"
 readme = "README.md"
 license = {text = "MIT"}
@@ -18,21 +18,21 @@ classifiers = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "aiohttp==3.13.3",
-    "pydantic==2.12.5",
-    "lxml==6.0.2",
-    "python-dateutil==2.9.0.post0",
+    "aiohttp>=3.13.3",
+    "pydantic>=2.12.0,<3.0.0",
+    "lxml>=6.0.2",
+    "python-dateutil>=2.9.0",
 ]
 
 [project.optional-dependencies]
 test = [
-    "colorlog==6.10.1",
-    "pytest==9.0.2",
-    "pytest-asyncio==1.3.0",
-    "pytest-cov==6.3.0",
+    "colorlog>=6.10.1",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.3.0",
 ]
 dev = [
-    "ruff==0.15.4",
+    "ruff>=0.9.0",
 ]
 
 [project.urls]
