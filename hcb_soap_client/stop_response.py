@@ -19,12 +19,18 @@ def _parse_float(value: str) -> float:
     return 0.0 if value == "" else float(value)
 
 
+def _parse_int(value: str) -> int:
+    """Parse int from string, defaulting to 0 for empty."""
+    return 0 if value == "" else int(value)
+
+
 def _parse_datetime(value: str) -> datetime:
     """Parse datetime string."""
     return parser.parse(value)
 
 
 FloatStr = Annotated[float, BeforeValidator(_parse_float)]
+IntStr = Annotated[int, BeforeValidator(_parse_int)]
 DateTimeStr = Annotated[datetime, BeforeValidator(_parse_datetime)]
 
 
@@ -44,7 +50,7 @@ class StudentStop(BaseModel):
     vehicle_id: str
     esn: str
     tier_start_time: TimeStr
-    bus_visibility_start_offset: int
+    bus_visibility_start_offset: IntStr
 
     @classmethod
     def from_element(cls, elem: etree._Element) -> "StudentStop":
@@ -63,7 +69,7 @@ class StudentStop(BaseModel):
             vehicle_id=elem.get("VehicleId", ""),
             esn=elem.get("Esn", ""),
             tier_start_time=elem.get("TierStartTime", "00:00:00"),
-            bus_visibility_start_offset=int(elem.get("BusVisibilityStartOffset", "0")),
+            bus_visibility_start_offset=elem.get("BusVisibilityStartOffset", "0"),
         )
 
 
