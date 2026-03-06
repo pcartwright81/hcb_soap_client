@@ -2,7 +2,9 @@
 
 from datetime import datetime, time
 
-from hcb_soap_client.stop_response import StopResponse
+from lxml import etree
+
+from hcb_soap_client.stop_response import StopResponse, StudentStop
 from tests import read_file
 
 
@@ -133,3 +135,26 @@ def test_stop_response_from_dict_pm() -> None:
     assert stop_response.student_stops[1].esn == "123456"
     assert stop_response.student_stops[1].tier_start_time == time(5, 42, 0)
     assert stop_response.student_stops[1].bus_visibility_start_offset == 0
+
+
+def test_student_stop_empty_bus_visibility_start_offset() -> None:
+    """Test that an empty BusVisibilityStartOffset defaults to 0."""
+    elem = etree.Element(
+        "StudentStop",
+        Name="Test Stop",
+        Latitude="34.0",
+        Longitude="-86.0",
+        StartTime="07:00:00",
+        StopType="Stop",
+        SubstituteVehicleName="",
+        VehicleName="Bus-1",
+        StopId="test-id",
+        ArrivalTime="06:00:00",
+        TimeOfDayId="test-tod-id",
+        VehicleId="test-vehicle-id",
+        Esn="000000",
+        TierStartTime="05:42:00",
+        BusVisibilityStartOffset="",
+    )
+    stop = StudentStop.from_element(elem)
+    assert stop.bus_visibility_start_offset == 0
