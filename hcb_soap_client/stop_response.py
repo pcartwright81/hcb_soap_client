@@ -18,6 +18,7 @@ def _parse_float(value: str) -> float:
     """Parse float from string, defaulting to 0 for empty."""
     return 0.0 if value == "" else float(value)
 
+
 def _parse_int(value: str) -> int:
     """Parse int from string, defaulting to 0 for empty."""
     return 0 if value == "" else int(value)
