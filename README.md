@@ -26,6 +26,7 @@ Using the async context manager is the most efficient approach as it reuses the 
 import asyncio
 from hcb_soap_client import HcbSoapClient
 
+
 async def main():
     async with HcbSoapClient() as client:
         # Get school ID from school code
@@ -43,12 +44,13 @@ async def main():
                 school_id,
                 account.account_id,
                 student.student_id,
-                HcbSoapClient.AM_ID  # or HcbSoapClient.PM_ID
+                HcbSoapClient.AM_ID,  # or HcbSoapClient.PM_ID
             )
 
             if stops.vehicle_location:
                 print(f"Bus location: {stops.vehicle_location.address}")
                 print(f"Speed: {stops.vehicle_location.speed} mph")
+
 
 asyncio.run(main())
 ```
@@ -69,6 +71,7 @@ You can provide your own `aiohttp.ClientSession` for advanced use cases:
 
 ```python
 import aiohttp
+
 
 async def custom_session_example():
     async with aiohttp.ClientSession() as session:
